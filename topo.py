@@ -80,27 +80,30 @@ class Fattree:
 		edge_switches = [];
 
 		# Creating core switches
+		core_switch_index = 0;
 		for i in range(1, (core_switch_group_size + 1)):
 			for j in range(1, (core_switch_group_size + 1)):
-				node = Node(f"10.{k}.{i}.{j}", "core");
+				node = Node(f"10.{k}.{i}.{j}", f"c{core_switch_index}");
 				core_switches.append(node);
 				self.switches.append(node);
+				core_switch_index += 1;
 		
 		# Creating Pods
+		host_index = 0;
 		for p in range(pods):
 			pod_aggs = []; # Aggregation Switches for pod p
 			pod_edges = []; # Edge (TOR) Switches for pod p
 
 			# Edge switches for pod p
 			for edge in range(pod_switches_per_layer):
-				edge_node = Node(f"10.{p}.{edge}.1", "edge");
+				edge_node = Node(f"10.{p}.{edge}.1", f"e{p}_{edge}");
 				pod_edges.append(edge_node);
 				edge_switches.append(edge_node);
 				self.switches.append(edge_node);
 
 			# Aggregation switches for pod p
 			for agg in range(pod_switches_per_layer):
-				aggregation_node = Node(f"10.{p}.{pod_switches_per_layer + agg}.1", "aggregation");
+				aggregation_node = Node(f"10.{p}.{pod_switches_per_layer + agg}.1", f"a{p}_{agg}");
 				pod_aggs.append(aggregation_node);
 				agregation_switches.append(aggregation_node);
 				self.switches.append(aggregation_node);
@@ -108,10 +111,11 @@ class Fattree:
 			# Connect Host servers to Edge Nodes in pod p
 			for edge in range(pod_switches_per_layer):
 				for h in range(hosts_per_edge_switch):
-					host = Node(f"10.{p}.{edge}.{h + 2}", "host");
+					host = Node(f"10.{p}.{edge}.{h + 2}", f"h{host_index}");
 					self.servers.append(host);
 					host.add_edge(pod_edges[edge]);
-				
+					host_index += 1;
+
 			for agg_nodes in pod_aggs:
 				for edge_node in pod_edges:
 					agg_nodes.add_edge(edge_node);
@@ -123,3 +127,10 @@ class Fattree:
 				for c in range(core_switch_group_size):
 					core_index = agg * core_switch_group_size + c; # Calculating core switch from it's index
 					aggregation_node.add_edge(core_switches[core_index]);
+
+# net_topo = Fattree(4)
+# for switch in net_topo.switches:
+# 	print(switch.id, switch.type)
+# print("--------------------------------")
+# for server in net_topo.servers:
+# 	print(server.id, server.type)
