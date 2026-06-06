@@ -35,8 +35,8 @@ class Edge:
 class Node:
 	def __init__(self, id, type):
 		self.edges = []
-		self.id = id
-		self.type = type
+		self.id = id # identifeid by ip
+		self.type = type # identifeid by node name
 
 	# Add an edge connected to another node
 	def add_edge(self, node):
