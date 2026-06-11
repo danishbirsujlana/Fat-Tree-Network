@@ -35,7 +35,7 @@ from ryu.lib.packet import arp
 from ryu.topology import event, switches
 from ryu.topology.api import get_switch, get_link
 from ryu.app.wsgi import ControllerBase
-
+import ipaddress
 import topo
 
 
@@ -48,7 +48,12 @@ class FTRouter(app_manager.RyuApp):
         
         # Initialize the topology with #ports=4
         self.topo_net = topo.Fattree(4)
+        self.dst_to_port = {} # dpid -> dst_ip -> portNo
 
+        # ARP table: ip_str -> (mac_str, dpid, port_no)
+        self.arp_table = {} 
+
+    # Topology discovery
     # Topology discovery
     @set_ev_cls(event.EventSwitchEnter)
     def get_topology_data(self, ev):
@@ -56,6 +61,23 @@ class FTRouter(app_manager.RyuApp):
         # Switches and links in the network
         switches = get_switch(self, None)
         links = get_link(self, None)
+
+        for link in links:
+            src_dpid = link.src.dpid
+            dst_dpid = link.dst.dpid
+
+            src_ip = str(ipaddress.IPv4Address(src_dpid))
+            dst_ip = str(ipaddress.IPv4Address(dst_dpid))
+
+            # self.dst_to_port.setdefault(src_dpid, {})
+            if src_dpid not in self.dst_to_port:
+                self.dst_to_port[src_dpid] = {}
+            self.dst_to_port[src_dpid][dst_ip] = link.src.port_no
+
+            # self.dst_to_port.setdefault(dst_dpid, {})
+            if dst_dpid not in self.dst_to_port:
+                self.dst_to_port[dst_dpid] = {}
+            self.dst_to_port[dst_dpid][src_ip] = link.dst.port_no
 
     @set_ev_cls(ofp_event.EventOFPSwitchFeatures, CONFIG_DISPATCHER)
     def switch_features_handler(self, ev):

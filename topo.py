@@ -83,7 +83,7 @@ class Fattree:
 		core_switch_index = 0;
 		for i in range(1, (core_switch_group_size + 1)):
 			for j in range(1, (core_switch_group_size + 1)):
-				node = Node(f"10.{k}.{i}.{j}", f"c{core_switch_index}");
+				node = Node(f"10.{k}.{i}.{j}", f"c_{core_switch_index}");
 				core_switches.append(node);
 				self.switches.append(node);
 				core_switch_index += 1;
@@ -96,14 +96,14 @@ class Fattree:
 
 			# Edge switches for pod p
 			for edge in range(pod_switches_per_layer):
-				edge_node = Node(f"10.{p}.{edge}.1", f"e{p}_{edge}");
+				edge_node = Node(f"10.{p}.{edge}.1", f"e_{p}_{edge}");
 				pod_edges.append(edge_node);
 				edge_switches.append(edge_node);
 				self.switches.append(edge_node);
 
 			# Aggregation switches for pod p
 			for agg in range(pod_switches_per_layer):
-				aggregation_node = Node(f"10.{p}.{pod_switches_per_layer + agg}.1", f"a{p}_{agg}");
+				aggregation_node = Node(f"10.{p}.{pod_switches_per_layer + agg}.1", f"a_{p}_{agg}");
 				pod_aggs.append(aggregation_node);
 				agregation_switches.append(aggregation_node);
 				self.switches.append(aggregation_node);
@@ -111,7 +111,7 @@ class Fattree:
 			# Connect Host servers to Edge Nodes in pod p
 			for edge in range(pod_switches_per_layer):
 				for h in range(hosts_per_edge_switch):
-					host = Node(f"10.{p}.{edge}.{h + 2}", f"h{host_index}");
+					host = Node(f"10.{p}.{edge}.{h + 2}", f"h_{host_index}");
 					self.servers.append(host);
 					host.add_edge(pod_edges[edge]);
 					host_index += 1;

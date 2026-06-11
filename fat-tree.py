@@ -34,9 +34,12 @@ from mininet.link import TCLink
 from mininet.node import Node, OVSKernelSwitch, RemoteController
 from mininet.topo import Topo
 from mininet.util import waitListening, custom
-
+import ipaddress
 import topo
 
+def ip_to_dpid(ip_str):
+    ip_int = int(ipaddress.IPv4Address(ip_str))
+    return format(ip_int, '016x')
 
 class FattreeNet(Topo):
     """
@@ -53,11 +56,12 @@ class FattreeNet(Topo):
         node_map = {};
         print("================== Adding hosts ==================")
         for server in ft_topo.servers:
-            node_map[server.type] = self.addHost(server.type, ip=f"{server.id}/24", defaultRoute=f"via {server.id}");
+            node_map[server.id] = self.addHost(server.type, ip=f"{server.id}/24", defaultRoute=f"via {server.id}");
         
         print("================== Adding switches ==================")
         for switch in ft_topo.switches:
-            node_map[switch.type] = self.addSwitch(switch.type);
+            dpid = ip_to_dpid(switch.id)
+            node_map[switch.id] = self.addSwitch(switch.type, dpid=dpid);
 
         
         print("================== Adding links ==================")
@@ -68,8 +72,8 @@ class FattreeNet(Topo):
             for edge in node.edges:
                 # get actual mininet objects
                 peer = edge.rnode if edge.lnode is node else edge.lnode
-                n1 = node_map[node.type]
-                n2 = node_map[peer.type]
+                n1 = node_map[node.id]
+                n2 = node_map[peer.id]
 
                 # avoid duplicate links
                 pair = tuple(sorted((n1, n2)))
@@ -82,7 +86,7 @@ class FattreeNet(Topo):
 def make_mininet_instance(graph_topo):
 
     net_topo = FattreeNet(graph_topo)
-    net = Mininet(topo=net_topo, controller=None, autoSetMacs=True)
+    net = Mininet(topo=net_topo, controller=None, autoSetMacs=True, switch=OVSKernelSwitch, link=TCLink,)
     net.addController('c0', controller=RemoteController,
                       ip="127.0.0.1", port=6653)
     return net
